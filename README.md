@@ -23,7 +23,8 @@ client-side or order-parsing overhead.
 
 See `RIME_EVIDENCE.md` for the acceptance test, method, and results.
 
-##PROTOTYPE DEMO VIDEO LINK"
+## PROTOTYPE DEMO VIDEO LINK
+
 https://youtu.be/OhWjuUR_Nkw
 
 ## Architecture
