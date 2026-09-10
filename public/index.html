@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Kirana Voice — Order by Speaking</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream: #f2e9d8;
+    --card: #fffcf4;
+    --ink: #221d17;
+    --muted: #7c725d;
+    --plum: #4b2145;
+    --plum-soft: #6b3763;
+    --teal: #1e6f68;
+    --amber: #d98a26;
+    --amber-soft: #f0c07a;
+    --line: #ddccA0;
+    --danger: #c0463b;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    background: var(--cream);
+    color: var(--ink);
+    padding-bottom: 60px;
+  }
+
+  .wrap { max-width: 560px; margin: 0 auto; padding: 0 22px; }
+
+  .hero { text-align: center; padding: 46px 0 8px; }
+  .brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--plum);
+    margin-bottom: 18px;
+  }
+  .brand .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--amber);
+  }
+  .hero h1 {
+    font-family: 'Zilla Slab', serif;
+    font-weight: 700;
+    font-size: 34px;
+    line-height: 1.15;
+    margin: 0 0 10px;
+    letter-spacing: -0.2px;
+  }
+  .hero p {
+    font-size: 15.5px;
+    color: var(--muted);
+    max-width: 42ch;
+    margin: 0 auto;
+    line-height: 1.55;
+  }
+
+  .dial-stage {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 34px 0 6px;
+  }
+  .dial {
+    position: relative;
+    width: 208px;
+    height: 208px;
+    border-radius: 50%;
+  }
+  .dial .ticks {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: repeating-conic-gradient(var(--line) 0deg 1.6deg, transparent 1.6deg 9deg);
+    -webkit-mask-image: radial-gradient(circle, transparent 62%, black 63%);
+            mask-image: radial-gradient(circle, transparent 62%, black 63%);
+  }
+  .dial .ring {
+    position: absolute;
+    inset: 18px;
+    border-radius: 50%;
+    background: var(--card);
+    border: 1px solid var(--line);
+    box-shadow: inset 0 2px 10px rgba(75, 33, 69, 0.08);
+  }
+  #talk-btn {
+    position: absolute;
+    inset: 40px;
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+    background: linear-gradient(160deg, var(--amber-soft) 0%, var(--amber) 100%);
+    color: #34220a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 8px 20px rgba(217, 138, 38, 0.35);
+    transition: transform 0.15s ease, box-shadow 0.2s ease, background 0.3s ease;
+  }
+  #talk-btn:hover { transform: scale(1.04); }
+  #talk-btn:disabled { cursor: not-allowed; opacity: 0.7; }
+  #talk-btn:focus-visible { outline: 3px solid var(--plum); outline-offset: 4px; }
+  #talk-btn svg { width: 30px; height: 30px; }
+
+  .dial.listening #talk-btn {
+    background: linear-gradient(160deg, #ea9d95 0%, var(--danger) 100%);
+    color: #fff4f2;
+    animation: dial-pulse 1.3s infinite;
+  }
+  .dial.speaking #talk-btn {
+    background: linear-gradient(160deg, #79c9c1 0%, var(--teal) 100%);
+    color: #eafffb;
+  }
+  @keyframes dial-pulse {
+    0%   { box-shadow: 0 0 0 0 rgba(192,70,59,0.4), 0 8px 20px rgba(192,70,59,0.35); }
+    70%  { box-shadow: 0 0 0 18px rgba(192,70,59,0), 0 8px 20px rgba(192,70,59,0.3); }
+    100% { box-shadow: 0 0 0 0 rgba(192,70,59,0), 0 8px 20px rgba(192,70,59,0.35); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .dial.listening #talk-btn { animation: none; }
+  }
+
+  .freq {
+    margin-top: 16px;
+    font-variant-numeric: tabular-nums;
+    font-size: 13px;
+    letter-spacing: 0.4px;
+    color: var(--muted);
+    min-height: 18px;
+  }
+  .freq b { color: var(--ink); font-weight: 600; }
+
+  .bars {
+    display: flex;
+    align-items: flex-end;
+    gap: 4px;
+    height: 20px;
+    margin-top: 12px;
+    visibility: hidden;
+  }
+  .bars.active { visibility: visible; }
+  .bars span {
+    width: 4px;
+    border-radius: 2px;
+    background: var(--teal);
+    animation: bar-bounce 0.85s ease-in-out infinite;
+  }
+  .bars span:nth-child(1) { animation-delay: 0s; }
+  .bars span:nth-child(2) { animation-delay: .12s; }
+  .bars span:nth-child(3) { animation-delay: .24s; }
+  .bars span:nth-child(4) { animation-delay: .12s; }
+  .bars span:nth-child(5) { animation-delay: 0s; }
+  @keyframes bar-bounce { 0%,100% { height: 4px; } 50% { height: 20px; } }
+
+  .chip-row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    margin: 26px 0 10px;
+  }
+  .chip {
+    border: 1px solid var(--line);
+    background: var(--card);
+    color: var(--ink);
+    font-family: inherit;
+    font-size: 13px;
+    padding: 8px 13px;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: border-color 0.2s ease, background 0.2s ease;
+  }
+  .chip:hover { border-color: var(--plum-soft); background: #fff6e7; }
+  .chip:disabled { cursor: not-allowed; opacity: 0.6; }
+
+  .panel {
+    margin-top: 30px;
+    padding-top: 22px;
+    border-top: 1px solid var(--line);
+  }
+  .panel h2 {
+    font-family: 'Zilla Slab', serif;
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0 0 12px;
+  }
+  #convo-empty { color: var(--muted); font-size: 14px; }
+  .turn {
+    display: grid;
+    grid-template-columns: 64px 1fr;
+    gap: 10px;
+    padding: 9px 0;
+    border-bottom: 1px dashed var(--line);
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .turn:first-child { border-top: 1px dashed var(--line); }
+  .turn .who { font-weight: 600; font-size: 12.5px; color: var(--muted); padding-top: 1px; }
+  .turn.you .who { color: var(--plum); }
+  .turn.wl .who { color: var(--teal); }
+  .turn .meta {
+    display: block;
+    margin-top: 4px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .turn .meta b { color: var(--amber); }
+
+  .product-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 10px;
+  }
+  .product-card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 14px 8px;
+    text-align: center;
+    transition: box-shadow 0.25s ease, border-color 0.25s ease, transform 0.25s ease;
+  }
+  .product-card .emoji { font-size: 28px; display: block; margin-bottom: 6px; }
+  .product-card .name { font-size: 13.5px; font-weight: 600; }
+  .product-card .price { font-size: 11.5px; color: var(--muted); margin-top: 2px; }
+  .product-card.matched {
+    border-color: var(--teal);
+    box-shadow: 0 0 0 3px rgba(30,111,104,0.18);
+    transform: translateY(-2px);
+  }
+
+  .log-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--muted);
+    margin: 24px 0 8px;
+  }
+  #log { font-size: 12.5px; color: var(--muted); }
+  #log div {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 8px 12px;
+    margin-bottom: 6px;
+  }
+
+  .note {
+    margin-top: 26px;
+    font-size: 12.5px;
+    color: var(--muted);
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <div class="hero">
+    <div class="brand"><span class="dot"></span> KIRANA VOICE</div>
+    <h1>Just speak, and it's ordered.</h1>
+    <p>Order your groceries by speaking — tap the dial and say something like "2 kg rice" or "1 kg ghee".</p>
+  </div>
+
+  <div class="dial-stage">
+    <div class="dial" id="dial">
+      <div class="ticks"></div>
+      <div class="ring"></div>
+      <button id="talk-btn" aria-label="Tap to place your order by voice">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M12 15a3.5 3.5 0 0 0 3.5-3.5V6a3.5 3.5 0 0 0-7 0v5.5A3.5 3.5 0 0 0 12 15Z" fill="currentColor"/>
+          <path d="M6.5 11.5a.9.9 0 0 0-1.8 0 7.3 7.3 0 0 0 6.4 7.25V21H9a.9.9 0 0 0 0 1.8h6a.9.9 0 0 0 0-1.8h-2.1v-2.25a7.3 7.3 0 0 0 6.4-7.25.9.9 0 0 0-1.8 0 5.5 5.5 0 0 1-11 0Z" fill="currentColor"/>
+        </svg>
+      </button>
+    </div>
+    <div class="freq" id="freq">Tap the dial to speak</div>
+    <div class="bars" id="bars"><span></span><span></span><span></span><span></span><span></span></div>
+  </div>
+
+  <div class="chip-row">
+    <button class="chip" data-say="2 kg rice">2 kg rice</button>
+    <button class="chip" data-say="1 kg ghee">1 kg ghee</button>
+    <button class="chip" data-say="half kg sugar">half kg sugar</button>
+    <button class="chip" data-say="1 kg wheat flour">1 kg wheat flour</button>
+    <button class="chip" data-say="1 kg oil">1 kg oil</button>
+  </div>
+
+  <div class="panel">
+    <h2>Conversation</h2>
+    <div id="convo-empty">Nothing said yet — tap the dial or a suggestion above.</div>
+    <div id="convo"></div>
+  </div>
+
+  <div class="panel">
+    <h2>Available items</h2>
+    <div class="product-grid">
+      <div class="product-card" data-id="rice"><span class="emoji">🍚</span><span class="name">Rice</span><span class="price">₹60/kg</span></div>
+      <div class="product-card" data-id="atta"><span class="emoji">🌾</span><span class="name">Wheat flour</span><span class="price">₹40/kg</span></div>
+      <div class="product-card" data-id="sugar"><span class="emoji">🍬</span><span class="name">Sugar</span><span class="price">₹45/kg</span></div>
+      <div class="product-card" data-id="oil"><span class="emoji">🛢️</span><span class="name">Oil</span><span class="price">₹150/kg</span></div>
+      <div class="product-card" data-id="salt"><span class="emoji">🧂</span><span class="name">Salt</span><span class="price">₹20/kg</span></div>
+      <div class="product-card" data-id="ghee"><span class="emoji">🧈</span><span class="name">Ghee</span><span class="price">₹500/kg</span></div>
+    </div>
+  </div>
+
+  <div class="log-title">Response time log (test evidence)</div>
+  <div id="log"></div>
+
+  <div class="note" id="support-note"></div>
+
+</div>
+
+<script>
+const dial = document.getElementById("dial");
+const talkBtn = document.getElementById("talk-btn");
+const freqEl = document.getElementById("freq");
+const bars = document.getElementById("bars");
+const convo = document.getElementById("convo");
+const convoEmpty = document.getElementById("convo-empty");
+const supportNote = document.getElementById("support-note");
+const chips = document.querySelectorAll(".chip");
+const productCards = document.querySelectorAll(".product-card");
+const logEl = document.getElementById("log");
+
+const SpeechRecognitionCtor = window.SpeechRecognition || window.webkitSpeechRecognition;
+let recognition = null;
+let busy = false;
+
+if (SpeechRecognitionCtor) {
+  recognition = new SpeechRecognitionCtor();
+  recognition.lang = "en-IN"; // English input; backend catalog also matches English keys (rice, atta, sugar, oil, salt, ghee)
+  recognition.interimResults = false;
+  recognition.maxAlternatives = 1;
+
+  recognition.onresult = (event) => {
+    const heard = event.results[0][0].transcript;
+    handleUtterance(heard);
+  };
+  recognition.onerror = () => {
+    setState("idle");
+    freqEl.innerHTML = `Didn't catch that — try again`;
+    busy = false;
+  };
+  recognition.onend = () => {
+    if (dial.classList.contains("listening")) setState("idle");
+  };
+
+  talkBtn.addEventListener("click", () => {
+    if (busy) return;
+    setState("listening");
+    recognition.start();
+  });
+} else {
+  supportNote.innerText = "Live speech capture needs Chrome or Edge — meanwhile, tap a suggestion below to try it by text.";
+  talkBtn.disabled = true;
+}
+
+chips.forEach((chip) => {
+  chip.addEventListener("click", () => {
+    if (busy) return;
+    handleUtterance(chip.dataset.say);
+  });
+});
+
+function setState(state) {
+  dial.classList.remove("listening", "speaking");
+  bars.classList.remove("active");
+  if (state === "listening") {
+    dial.classList.add("listening");
+    bars.classList.add("active");
+    freqEl.innerHTML = `Listening...`;
+  } else if (state === "speaking") {
+    dial.classList.add("speaking");
+    freqEl.innerHTML = `Replying...`;
+  } else {
+    freqEl.innerHTML = `Tap the dial to speak`;
+  }
+}
+
+async function handleUtterance(transcript) {
+  busy = true;
+  talkBtn.disabled = true;
+  chips.forEach((c) => (c.disabled = true));
+
+  addTurn("you", transcript);
+  setState("speaking");
+  freqEl.innerHTML = `Understanding your order...`;
+
+  const t0 = performance.now();
+
+  try {
+    const res = await fetch("/api/respond", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ transcript }),
+    });
+
+    if (!res.ok) {
+      addTurn("wl", "Something went wrong — please try again.");
+      resetAfterTurn();
+      return;
+    }
+
+    const replyText = decodeURIComponent(res.headers.get("X-Reply-Text") || "");
+    const serverMs = res.headers.get("X-Server-Ms");
+    const itemId = res.headers.get("X-Item-Id");
+
+    productCards.forEach((card) => card.classList.remove("matched"));
+    if (itemId) {
+      const matchedCard = document.querySelector(`.product-card[data-id="${itemId}"]`);
+      if (matchedCard) matchedCard.classList.add("matched");
+    }
+
+    const audioBlob = await res.blob();
+    const audioUrl = URL.createObjectURL(audioBlob);
+    const audio = new Audio(audioUrl);
+
+    audio.onplay = () => {
+      const perceivedMs = Math.round(performance.now() - t0);
+      addTurn("wl", replyText, perceivedMs, serverMs);
+
+      const entry = document.createElement("div");
+      entry.innerText = `"${transcript}" -> ${perceivedMs} ms total (${serverMs} ms server-side)`;
+      logEl.prepend(entry);
+    };
+    audio.onended = () => resetAfterTurn();
+    audio.onerror = () => resetAfterTurn();
+
+    audio.play();
+  } catch (err) {
+    addTurn("wl", "Could not reach the server. Please try again.");
+    resetAfterTurn();
+  }
+}
+
+function resetAfterTurn() {
+  setState("idle");
+  busy = false;
+  talkBtn.disabled = false;
+  chips.forEach((c) => (c.disabled = false));
+}
+
+function addTurn(who, text, perceivedMs, serverMs) {
+  convoEmpty.style.display = "none";
+  const row = document.createElement("div");
+  row.className = `turn ${who}`;
+  const label = who === "you" ? "You" : "Kirana Voice";
+  let metaHtml = "";
+  if (perceivedMs !== undefined) {
+    metaHtml = `<span class="meta">Timing: <b>${perceivedMs} ms</b> total${serverMs ? ` / ${serverMs} ms server` : ""}</span>`;
+  }
+  row.innerHTML = `<div class="who">${label}</div><div class="text"></div>`;
+  const textEl = row.querySelector(".text");
+  textEl.innerText = text;
+  if (metaHtml) textEl.insertAdjacentHTML("beforeend", metaHtml);
+  convo.prepend(row);
+}
+</script>
+</body>
+</html>
