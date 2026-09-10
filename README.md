@@ -27,6 +27,13 @@ See `RIME_EVIDENCE.md` for the acceptance test, method, and results.
 
 https://youtu.be/OhWjuUR_Nkw
 
+## PROTOTYPE SNAPSHOTS
+
+https://drive.google.com/drive/folders/1XHCQURfFnZfvBE5o79t3CHyJyK9GJX9_?usp=sharing
+
+
+
+
 ## Architecture
 
 ```
